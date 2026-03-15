@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  BARISTA
+}
+
+enum MenuCategory {
+  DRINKS
+  FOOD
+  OTHER
+}
+
+enum ModifierType {
+  SIZE
+  MILK
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+}
+
+enum PaymentType {
+  CARD
+  CASH
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  pin          String?  @db.VarChar(6)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model MenuItem {
+  id        String       @id @default(uuid())
+  name      String
+  priceCents Int         @map("price_cents")
+  category  MenuCategory
+  available Boolean      @default(true)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  modifiers  Modifier[]
+  orderItems OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Modifier {
+  id                  String       @id @default(uuid())
+  menuItemId          String       @map("menu_item_id")
+  type                ModifierType
+  name                String
+  priceAdjustmentCents Int         @map("price_adjustment_cents") @default(0)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("modifiers")
+}
+
+model Order {
+  id                    String      @id @default(uuid())
+  status                OrderStatus @default(PENDING)
+  paymentType           PaymentType? @map("payment_type")
+  totalCents            Int         @map("total_cents")
+  stripePaymentIntentId String?     @map("stripe_payment_intent_id")
+  createdAt             DateTime    @default(now()) @map("created_at")
+
+  orderItems OrderItem[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String @id @default(uuid())
+  orderId       String @map("order_id")
+  menuItemId    String @map("menu_item_id")
+  quantity      Int
+  unitPriceCents Int   @map("unit_price_cents")
+  modifiersJson Json?  @map("modifiers_json") @db.JsonB
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}

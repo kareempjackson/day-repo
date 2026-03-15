@@ -1,0 +1,9 @@
+export enum MenuCategory {
+  COFFEE = 'COFFEE',
+  TEA = 'TEA',
+  ESPRESSO = 'ESPRESSO',
+  COLD_DRINKS = 'COLD_DRINKS',
+  PASTRIES = 'PASTRIES',
+  SANDWICHES = 'SANDWICHES',
+  SNACKS = 'SNACKS',
+}

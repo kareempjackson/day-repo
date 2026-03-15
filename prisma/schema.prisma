@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MenuCategory {
+  COFFEE
+  TEA
+  ESPRESSO
+  COLD_DRINKS
+  PASTRIES
+  SANDWICHES
+  SNACKS
+}
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model MenuItem {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  category    MenuCategory
+  imageUrl    String?
+  available   Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  modifiers Modifier[]
+
+  @@map("menu_items")
+}
+
+model Modifier {
+  id         String   @id @default(cuid())
+  name       String
+  priceCents Int      @default(0)
+  available  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("modifiers")
+}
